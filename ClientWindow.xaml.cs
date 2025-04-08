@@ -1,13 +1,16 @@
 ﻿using CefSharp;
 using CefSharp.Wpf;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 using System.Windows;
 using System.Windows.Threading;
 using Terus_Traffic.Ultilities;
+using Terus_Traffic.ViewModel;
 
 namespace Terus_Traffic
 {
@@ -34,8 +37,9 @@ namespace Terus_Traffic
         private bool FoundTarget = false;
         private bool IsScrolling = false;
         private bool IsScrollEnd = false;
+        private int ScrollCountdown = 30;
         private int InternalLinkComplete = 0;
-        private string[] InternalLinks;
+        private readonly string[] InternalLinks;
 
         public ClientWindow()
         {
@@ -67,6 +71,8 @@ namespace Terus_Traffic
                 "https://terusvn.com/dich-vu-facebook-ads-tai-terus/"
             };
 
+            Hide();
+
             GenerateUserAgent();
         }
 
@@ -75,6 +81,7 @@ namespace Terus_Traffic
             try
             {
                 CefSharpSettings.SubprocessExitIfParentProcessClosed = true;
+                //CefSharpSettings.RuntimeStyle = CefRuntimeStyle.Chrome;
                 CefSettings settings = new CefSettings();
                 settings.CefCommandLineArgs.Add("proxy-server", "200.29.191.149:3128");
                 CefSharpSettings.Proxy = new ProxyOptions("117.0.200.23", "40599", username: "yiekd_phanp", password: "HsRDWj87");
@@ -109,6 +116,15 @@ namespace Terus_Traffic
                 WindowState = WindowState.Maximized;
                 MinWidth = 1366.0;
                 MinHeight = 768.0;
+
+                //DataContext = new ClientViewModel(
+                //    WebBrowser,
+                //    "https://terusvn.com/thiet-ke-website-tai-hcm/",
+                //    "Thiết kế web Terus",
+                //    Dispatcher
+                //);
+
+                Hide();
             }
             catch (Exception ex)
             {
@@ -135,17 +151,29 @@ namespace Terus_Traffic
             try
             {
                 if (!e.Frame.IsMain) return;
-                Application.Current.Dispatcher.Invoke(() =>
+                Dispatcher.Invoke(() =>
                 {
                     IsLoadContent = true;
-                    Console.WriteLine("Address: " + WebBrowser.Address);
+                    //Console.WriteLine("Address: " + WebBrowser.Address);
                     var uri = new Uri(WebBrowser.Address);
                     if (WebBrowser.Address.Contains("google.com/sorry") || uri.Host == "ipv6.google.com" || uri.Host == "ipv4.google.com" || uri.Host == "www.ipv6.google.com" || uri.Host == "www.ipv4.google.com")
                     {
                         Console.WriteLine("Google reCaptcha");
                         GoogleCaptcha = true;
-                        WebBrowser.Stop();
-                        IsLoadContent = false;
+                        new Thread((ThreadStart)(() =>
+                        {
+                            MessageBox.Show("Vô làm Google Captcha đi!");
+                            Thread.CurrentThread.IsBackground = true;
+                        })).Start();
+                        //IsLoadContent = false;
+                        //IsSearchTraffic = false;
+                        //WebBrowser.Address = TargetUrl;
+                        //SerpPage = 1;
+                    }
+                    if (WebBrowser.Address.Contains("google.com/search") && SerpPage < 10)
+                    {
+                        if (GoogleCaptcha) GoogleCaptcha = false;
+                        SerpPage++;
                     }
                     LoadURL();
                 });
@@ -170,72 +198,123 @@ namespace Terus_Traffic
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (!StartSession) return;
-            if (!IsLoadContent) return;
-            if (!IsSearchTraffic)
+            try
             {
-                // Traffic Direct
-            }
-            else
-            {
-                if (!FoundTarget)
+                if (!StartSession) return;
+                if (!IsLoadContent) return;
+                if (!IsSearchTraffic)
                 {
-                    if (SerpPage == 0)
+                    if (!IsScrolling && !IsScrollEnd && InternalLinkComplete <= 0 && !GoogleCaptcha)
                     {
-                        HandleSearch();
+                        ScrollToTheEndOfPage(30 * 1000);
+                        ScrollTimer.Start();
                     }
-                    else
+                    else if (IsScrollEnd && InternalLinkComplete < 4)
                     {
-                        FindResult();
+                        HandleInternalLink();
                     }
-                }
-                else if (FoundTarget && !IsScrolling && !IsScrollEnd)
-                {
-                    ScrollToTheEndOfPage(3 * 1000);
-                    ScrollTimer.Start();
-                }
-                else if (FoundTarget && IsScrollEnd && InternalLinkComplete < 4)
-                {
-                    HandleInternalLink();
-                }
-                else if (FoundTarget && InternalLinkComplete >= 4)
-                {
-                    // Xong
-                    // Kết thúc session tạo lifecycle mới
+                    else if (InternalLinkComplete >= 4)
+                    {
+                        //TrafficClientController.UpdateAndReleaseItem(Traffic);
+                        //GoogleCaptcha = false;
+                        //IsSearchTraffic = false;
+                        //GetUrl = null;
+                        //TargetUrl = null;
+                        //Keyword = null;
+                        //StartSession = false;
+                        //SerpPage = 0;
+                        //FoundTarget = false;
+                        //IsScrolling = false;
+                        //IsScrollEnd = false;
+                        //InternalLinkComplete = 0;
+                        //WebBrowser.Address = "https://www.google.com";
+                    }
                 }
                 else
                 {
-                    // Lỗi
+                    if (!FoundTarget)
+                    {
+                        if (SerpPage == 0 && !GoogleCaptcha)
+                        {
+                            HandleSearch();
+                        }
+                        else if (SerpPage > 0 && !GoogleCaptcha)
+                        {
+                            FindResult();
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                    else if (FoundTarget && !IsScrolling && !IsScrollEnd)
+                    {
+                        ScrollToTheEndOfPage(30 * 1000);
+                        ScrollTimer.Start();
+                    }
+                    else if (FoundTarget && IsScrollEnd && InternalLinkComplete < 4)
+                    {
+                        HandleInternalLink();
+                    }
+                    else if (FoundTarget && InternalLinkComplete > 4)
+                    {
+                        TrafficClientController.UpdateAndReleaseItem(Traffic);
+                        GoogleCaptcha = false;
+                        IsSearchTraffic = false;
+                        GetUrl = null;
+                        TargetUrl = null;
+                        Keyword = null;
+                        StartSession = false;
+                        SerpPage = 0;
+                        FoundTarget = false;
+                        IsScrolling = false;
+                        IsScrollEnd = false;
+                        InternalLinkComplete = 0;
+                        WebBrowser.Address = "https://www.google.com";
+                    }
+                    else
+                    {
+                        // Lỗi
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
             }
         }
 
-        private async void ScrollTimer_Tick(object sender, EventArgs e)
+        private void ScrollTimer_Tick(object sender, EventArgs e)
         {
             try
             {
-                if (WebBrowser.CanExecuteJavascriptInMainFrame && WebBrowser.IsBrowserInitialized)
+                if (ScrollCountdown <= 0)
                 {
-                    string getCurrentScrollYScript = "window.scrollY;";
-                    string getTotalScrollHeightScript = "document.documentElement.scrollHeight || document.body.scrollHeight;";
-                    string getClientHeightScript = "document.documentElement.clientHeight || window.innerHeight;";
-
-                    var currentY = await WebBrowser.EvaluateScriptAsync<int>(getCurrentScrollYScript);
-                    var totalHeight = await WebBrowser.EvaluateScriptAsync<int>(getTotalScrollHeightScript);
-                    var viewportHeight = await WebBrowser.EvaluateScriptAsync<int>(getClientHeightScript);
-
-                    Console.WriteLine("currentY: " + currentY);
-                    Console.WriteLine("totalHeight: " + totalHeight);
-                    Console.WriteLine("viewportHeight: " + viewportHeight);
-
-                    // Kiểm tra xem đã cuộn đến cuối trang chưa (có một chút sai số cho độ chính xác)
-                    if (currentY + viewportHeight >= totalHeight - 5)
+                    ScrollTimer.Stop();
+                    IsScrolling = false;
+                    IsScrollEnd = true;
+                    Console.WriteLine("Finished scroll");
+                    ScrollCountdown = 30;
+                    if (FoundTarget && InternalLinkComplete >= 4)
                     {
-                        ScrollTimer.Stop();
+                        TrafficClientController.UpdateAndReleaseItem(Traffic);
+                        GoogleCaptcha = false;
+                        IsSearchTraffic = false;
+                        GetUrl = null;
+                        TargetUrl = null;
+                        Keyword = null;
+                        StartSession = false;
+                        SerpPage = 0;
+                        FoundTarget = false;
                         IsScrolling = false;
-                        IsScrollEnd = true;
-                        Console.WriteLine("Finished scroll");
+                        IsScrollEnd = false;
+                        InternalLinkComplete = 0;
+                        WebBrowser.Address = "https://www.google.com";
                     }
+                }
+                else
+                {
+                    ScrollCountdown--;
+                    Console.WriteLine("Scroll countdown: " + ScrollCountdown);
                 }
             }
             catch (Exception ex)
@@ -245,6 +324,9 @@ namespace Terus_Traffic
                 ScrollTimer.Stop();
                 IsScrolling = false;
                 IsScrollEnd = false;
+                //MessageBox.Show("Lỗi Scroll Timer: " + Environment.NewLine + ex.Message);
+                //ResourceShutdown();
+                //Close();
             }
         }
 
@@ -259,7 +341,6 @@ namespace Terus_Traffic
                 }
                 if (!StartSession)
                 {
-                    
                     Traffic = TrafficClientController.GetNextItemToProcess();
                     if (Traffic == null) WebBrowser.Address = "http://www.bing.com";
                     if(Traffic.Type == "Search")
@@ -316,7 +397,6 @@ namespace Terus_Traffic
                 {
                     IsSearchTraffic = false;
                     WebBrowser.Address = TargetUrl;
-                    ScrollToTheEndOfPage(180000);
                 }
             }
             catch (Exception ex)
@@ -332,7 +412,6 @@ namespace Terus_Traffic
                 Console.WriteLine("Seaching");
                 var script = "var els=document.getElementsByName('q')[0];els.value = '" + Keyword + "';setTimeout(() => {document.querySelector('form').submit();}, 1000);";
                 WebBrowser.EvaluateScriptAsync(script, new TimeSpan?(), false);
-                ++SerpPage;
                 IsLoadContent = false;
             }
             catch (Exception ex)
@@ -348,8 +427,7 @@ namespace Terus_Traffic
                 if (WebBrowser.CanExecuteJavascriptInMainFrame)
                 {
                     Console.WriteLine("In SERP Page: " + SerpPage);
-                    SerpPage++;
-                    var script = $"var targetUrl = '{TargetUrl}';var page = {SerpPage};";
+                    var script = $"var targetUrl = '{TargetUrl}';var page = {SerpPage + 1};";
                     script += @"
                         var results = document.querySelectorAll(`a[href='${targetUrl}']`)
                         if (results.length > 0) {
@@ -369,7 +447,7 @@ namespace Terus_Traffic
 
         private async void ScrollToTheEndOfPage(int miliseconds)
         {
-            if (WebBrowser.CanExecuteJavascriptInMainFrame)
+            if (WebBrowser != null && WebBrowser.CanExecuteJavascriptInMainFrame)
             {
                 IsScrolling = true;
                 string script = $"const totalDuration = {miliseconds}";
@@ -423,6 +501,7 @@ namespace Terus_Traffic
                 var script = $"document.querySelector(`.footer-link[href='{InternalLinks[InternalLinkComplete]}']`).click();";
                 WebBrowser.EvaluateScriptAsync(script, new TimeSpan?(), false);
                 Console.WriteLine("Handle internal: " + InternalLinks[InternalLinkComplete]);
+                IsScrolling = false;
                 IsScrollEnd = false;
             }
             catch (Exception ex)
@@ -468,6 +547,23 @@ namespace Terus_Traffic
         {
             WebBrowser.Dispose();
             WebBrowser = null;
+            Timer.Stop();
+            ScrollTimer.Stop();
+        }
+
+        private void Exit()
+        {
+            new Thread((ThreadStart)(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+            })).Start();
+        }
+
+        private void ResourceShutdown()
+        {
+            Exit();
+            Process.Start(Application.ResourceAssembly.Location);
+            Application.Current.Shutdown();
         }
     }
 }

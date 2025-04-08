@@ -7,9 +7,10 @@
         xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         mc:Ignorable="d"
         Icon="/icon.png"
-        Title="Terus - Traffic" Height="200" Width="300">
+        Title="Terus - Traffic" Height="250" Width="400">
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -18,9 +19,10 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Label x:Name="Label" Content="Nhập số lượng Client muốn thêm" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
-        <TextBox x:Name="Input" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="30" Margin="0,0,0,15" FontSize="18" TextChanged="Input_TextChanged" PreviewTextInput="Input_PreviewTextInput" Text="" />
-        <Button x:Name="AddBtn" Content="Thêm Client" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="1" Height="30" Margin="0,0,10,0" Click="AddBtn_Click" />
+        <Button x:Name="UploadFile" Content="Upload File" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Height="30" Click="UploadFile_Click" />
+        <Label x:Name="Label" Content="Nhập số lượng Client muốn thêm" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
+        <TextBox x:Name="Input" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Height="30" Margin="0,0,0,15" FontSize="18" TextChanged="Input_TextChanged" PreviewTextInput="Input_PreviewTextInput" Text="" />
+        <Button x:Name="AddBtn" Content="Thêm Client" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="1" Height="30" Margin="0,0,10,0" Click="AddBtn_Click" />
         <Button x:Name="StopBtn" Content="Dừng toàn bộ Client" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Height="30" Margin="10,0,0,0" Click="StopBtn_Click" />
     </Grid>
 </Window>

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
 using OfficeOpenXml;
 
@@ -47,7 +48,17 @@ namespace Terus_Traffic.Ultilities
         {
             // !! IMPORTANT: Configure your settings here !!
             //_filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "TrafficData.xlsx");
-            _filePath = Path.Combine("D:\\Visual Studio\\projects\\Terus Traffic\\Data\\TrafficData.xlsx");
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+
+            bool? response = openFileDialog.ShowDialog();
+
+            if (response == true)
+            {
+                string filePath = openFileDialog.FileName;
+                MessageBox.Show(filePath);
+                _filePath = filePath;
+            }
+            //_filePath = Path.Combine("D:\\Visual Studio\\projects\\Terus Traffic\\Data\\TrafficData.xlsx");
             Console.WriteLine("Data Source: " + _filePath);
             _worksheetName = "Traffic URLs"; // <<<--- SET Your Sheet Name
             _idColumnName = nameof(TrafficUrlItem.Id); // <<<--- SET C# Property Name for ID (usually "Id")

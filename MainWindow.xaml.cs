@@ -1,6 +1,4 @@
-﻿using CefSharp;
-using CefSharp.Wpf;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,7 +11,7 @@ namespace Terus_Traffic
     /// </summary>
     public partial class MainWindow : Window
     {
-        private List<ClientWindow> ClientWindows = new List<ClientWindow>();
+        private readonly List<ClientWindow> ClientWindows = new List<ClientWindow>();
         public MainWindow()
         {
             InitializeComponent();
@@ -49,6 +47,20 @@ namespace Terus_Traffic
         {
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
+        }
+
+        private void UploadFile_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+
+            bool? response = openFileDialog.ShowDialog();
+
+            if (response == true)
+            {
+                string filePath = openFileDialog.FileName;
+                MessageBox.Show(filePath);
+
+            }
         }
     }
 }
