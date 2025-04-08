@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terus Traffic", "Terus Traffic.csproj", "{A1CDF250-E2E6-4C4D-A4F5-069A8924A012}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1CDF250-E2E6-4C4D-A4F5-069A8924A012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1CDF250-E2E6-4C4D-A4F5-069A8924A012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1CDF250-E2E6-4C4D-A4F5-069A8924A012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1CDF250-E2E6-4C4D-A4F5-069A8924A012}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B498B924-B227-44CB-98CE-B30E6BBB167B}
+	EndGlobalSection
+EndGlobal
